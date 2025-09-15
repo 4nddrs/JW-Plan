@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title if title else "Calendario Flask" }}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#1f2937", // Gris oscuro
+            secondary: "#111827", // Negro suave
+            highlight: "#60a5fa", // Azul brillante para acentos
+            text: "#f9fafb" // Blanco para texto
+          },
+          animation: {
+            fadeIn: 'fadeIn 0.5s ease-in-out',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: 0 },
+              '100%': { opacity: 1 },
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-secondary text-text min-h-screen flex">
+
+  <aside id="sidebar" class="bg-primary w-20 hover:w-64 min-h-screen p-4 transition-all duration-300 ease-in-out overflow-hidden transform -translate-x-full md:translate-x-0 group">
+    <div class="flex flex-col items-center h-full">
+      <div class="flex items-center justify-center mb-6 w-full">
+        <h1 class="text-xl font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">📅 Calendario</h1>
+      </div>
+      <nav class="space-y-4 w-full flex flex-col items-center">
+        <a href="/" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-home text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Inicio</span>
+        </a>
+        <a href="/locations" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-map-marker-alt text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Ubicaciones</span>
+        </a>
+        <a href="/conductors" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-users text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Conductores</span>
+        </a>
+        <a href="/territories" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-globe-americas text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Territorios</span>
+        </a>
+        <a href="/events" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-calendar-alt text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Eventos</span>
+        </a>
+        <a href="/pdf" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-file-pdf text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Generar PDF</span>
+        </a>
+        <a href="/link" class="flex items-center px-2 py-2 w-full rounded-md text-sm font-medium hover:bg-gray-700/50 transition-colors duration-200">
+          <i class="fas fa-file-export text-lg"></i>
+          <span class="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">Exportar ICS</span>
+        </a>
+      </nav>
+    </div>
+  </aside>
+
+  <div class="flex-1 p-8 transition-all duration-300 ml-0 md:ml-20 group-hover:md:ml-64" id="mainContent">
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    const sidebar = document.getElementById("sidebar");
+    const mainContent = document.getElementById("mainContent");
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // Toggle en modo móvil
+      const toggleButton = document.querySelector("#sidebar button");
+      toggleButton.style.display = 'block'; // Muestra el botón de hamburguesa
+      sidebar.classList.remove('w-20', 'hover:w-64', 'group');
+      sidebar.classList.add('w-64');
+      mainContent.classList.remove('md:ml-20', 'group-hover:md:ml-64');
+
+      toggleButton.addEventListener("click", () => {
+        sidebar.classList.toggle("-translate-x-full");
+      });
+    } else {
+      // Oculta el botón en desktop y ajusta el margen del contenido principal
+      const toggleButton = document.querySelector("#sidebar button");
+      toggleButton.style.display = 'none';
+      mainContent.classList.add('md:ml-20', 'group-hover:md:ml-64');
+    }
+  </script>
+</body>
+</html>

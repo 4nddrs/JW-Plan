@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6 md:p-10">
+  <h2 class="text-3xl font-extrabold mb-8 text-highlight border-b-2 border-gray-700 pb-2">
+    📅 Administrar Eventos
+  </h2>
+
+  <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
+    <h3 class="text-xl font-semibold mb-4 text-text">Agregar Nuevo Evento</h3>
+    <form action="/events/add" method="post" class="space-y-6">
+      <div>
+        <label for="title" class="block mb-2 text-sm font-medium text-gray-300">Título</label>
+        <select id="title" name="title" class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" required>
+          <option value="" class="text-gray-400">-- Seleccionar un evento --</option>
+          <option value="Mañana">Mañana</option>
+          <option value="Tarde">Tarde</option>
+          <option value="Pública">Pública</option>
+          <option value="Viloma Cala Cala">Viloma Cala Cala</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="start_time" class="block mb-2 text-sm font-medium text-gray-300">Hora de Inicio</label>
+        <input type="datetime-local" id="start_time" name="start_time" 
+               class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" required>
+      </div>
+
+      <div>
+        <label for="locationSelect" class="block mb-2 text-sm font-medium text-gray-300">Ubicación</label>
+        <select id="locationSelect" name="location_id" 
+                class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" required>
+          <option value="" class="text-gray-400">-- Seleccionar Ubicación --</option>
+          {% for loc in locations %}
+            <option value="{{ loc.id }}" data-url="{{ loc.url }}">{{ loc.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="locationUrl" class="block mb-2 text-sm font-medium text-gray-300">URL (auto-llenado)</label>
+        <input type="text" id="locationUrl" name="url" 
+               class="w-full px-4 py-2 rounded-md bg-gray-700 text-white cursor-not-allowed" readonly>
+      </div>
+
+      <div>
+        <label for="conductorSelect" class="block mb-2 text-sm font-medium text-gray-300">Conductor</label>
+        <select id="conductorSelect" name="conductor_id" 
+                class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" required>
+          <option value="" class="text-gray-400">-- Seleccionar Conductor --</option>
+          {% for c in conductors %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+          <label for="territorySelect" class="block mb-2 text-sm font-medium text-gray-300">Territorio(s)</label>
+          <div class="flex gap-4 mb-2">
+              <select id="territorySelect" class="flex-1 px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200">
+                  <option value="" class="text-gray-400">-- Seleccionar Territorio --</option>
+                  {% for t in territories %}
+                      <option value="{{ t.number }}" data-id="{{ t.id }}">Territorio {{ t.number }}</option>
+                  {% endfor %}
+              </select>
+              <button type="button" id="addTerritoryBtn" class="bg-gray-600 px-4 py-2 rounded-md text-white font-bold hover:bg-gray-500 transition-colors duration-200">
+                  <i class="fas fa-plus"></i>
+              </button>
+          </div>
+          
+          <div id="selectedTerritoriesContainer" class="flex flex-wrap gap-2 p-2 rounded-md bg-gray-800">
+              <p id="noTerritoriesText" class="text-gray-400 text-sm">No hay territorios seleccionados.</p>
+          </div>
+
+          <input type="hidden" id="territoryInput" name="territories_list" value="" required>
+      </div>
+
+      <button type="submit" 
+              class="w-full bg-highlight px-6 py-3 rounded-md text-primary font-bold hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200">
+        <i class="fas fa-plus mr-2"></i>Agregar Evento
+      </button>
+    </form>
+  </div>
+
+  <div class="p-6 md:p-10">
+    <div class="mb-6 flex flex-col md:flex-row gap-4 items-center">
+      <div class="relative flex-1 w-full">
+        <input type="text" id="searchInput" placeholder="Buscar eventos..."
+               class="w-full pl-10 pr-4 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-highlight transition-colors duration-200">
+        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+      </div>
+      <select id="filterSelect"
+              class="w-full md:w-auto px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-colors duration-200">
+        <option value="all">Todos los Eventos</option>
+        <option value="today">Hoy</option>
+        <option value="this-week">Esta Semana</option>
+        <option value="this-month">Este Mes</option>
+      </select>
+    </div>
+
+    <div id="eventListContainer" class="space-y-6">
+    </div>
+  </div>
+</div>
+
+<script>
+    const allEvents = {{ events | tojson }};
+    const eventListContainer = document.getElementById("eventListContainer");
+    const searchInput = document.getElementById("searchInput");
+    const filterSelect = document.getElementById("filterSelect");
+
+    function renderEvents(eventsToRender) {
+        eventListContainer.innerHTML = '';
+        if (eventsToRender.length === 0) {
+            eventListContainer.innerHTML = '<p class="text-center text-gray-400">No se encontraron eventos.</p>';
+            return;
+        }
+
+        const groupedEvents = eventsToRender.reduce((acc, event) => {
+            const date = new Date(event.start_time);
+            const monthYear = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+            if (!acc[monthYear]) {
+                acc[monthYear] = [];
+            }
+            acc[monthYear].push(event);
+            return acc;
+        }, {});
+
+        for (const monthYear in groupedEvents) {
+            const monthSection = document.createElement('div');
+            monthSection.className = "bg-primary rounded-lg shadow-xl p-6 animate-fadeIn space-y-4";
+            
+            // Título del mes con el botón de alternancia
+            const monthHeader = document.createElement('div');
+            monthHeader.className = "flex justify-between items-center cursor-pointer text-highlight sticky top-0 bg-primary py-2";
+            monthHeader.innerHTML = `
+                <h3 class="text-xl font-semibold">${monthYear.charAt(0).toUpperCase() + monthYear.slice(1)}</h3>
+                <i class="fas fa-chevron-down text-lg transition-transform duration-300 transform rotate-0"></i>
+            `;
+            monthSection.appendChild(monthHeader);
+
+            const ul = document.createElement('ul');
+            ul.className = "space-y-4";
+            
+            groupedEvents[monthYear].forEach(event => {
+                const li = document.createElement('li');
+                li.className = "bg-gray-700/50 p-4 rounded-md flex flex-col md:flex-row md:justify-between md:items-center transition-all duration-200 hover:bg-gray-700";
+                
+                li.innerHTML = `
+                    <div class="mb-2 md:mb-0">
+                        <p class="font-semibold text-lg text-highlight">${event.title}</p>
+                        <p class="text-sm text-gray-400">${event.start_time_formatted}</p>
+                        <p class="text-sm mt-1">
+                            <span class="text-gray-300">📍 ${event.location_name}</span> |
+                            <span class="text-gray-300">👤 ${event.conductor_name}</span> |
+                            <span class="text-gray-300">🗺️ Territorio ${event.territory_number}</span>
+                        </p>
+                    </div>
+                    <a href="/events/delete/${event.id}" class="text-red-400 hover:text-red-500 transition-colors duration-200 mt-2 md:mt-0 self-end md:self-auto">
+                        <i class="fas fa-trash-alt text-lg"></i>
+                    </a>
+                `;
+                ul.appendChild(li);
+            });
+            
+            monthSection.appendChild(ul);
+            eventListContainer.appendChild(monthSection);
+
+            // Agregar el event listener para el plegado
+            monthHeader.addEventListener('click', () => {
+                const list = monthHeader.nextElementSibling;
+                const icon = monthHeader.querySelector('i');
+                list.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        }
+    }
+
+    window.onload = () => {
+        const today = new Date();
+        const currentMonthYear = today.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+        const initialEvents = allEvents.filter(event => {
+            const eventDate = new Date(event.start_time);
+            const eventMonthYear = eventDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+            return eventMonthYear === currentMonthYear;
+        });
+        renderEvents(initialEvents);
+    };
+
+    searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        const filteredEvents = allEvents.filter(event =>
+            event.title.toLowerCase().includes(query) ||
+            event.location_name.toLowerCase().includes(query) ||
+            event.conductor_name.toLowerCase().includes(query)
+        );
+        renderEvents(filteredEvents);
+    });
+
+    filterSelect.addEventListener('change', () => {
+        const filterValue = filterSelect.value;
+        let filteredEvents = allEvents;
+        const now = new Date();
+        
+        if (filterValue === 'today') {
+            filteredEvents = allEvents.filter(event => {
+                const eventDate = new Date(event.start_time);
+                return eventDate.getDate() === now.getDate() &&
+                       eventDate.getMonth() === now.getMonth() &&
+                       eventDate.getFullYear() === now.getFullYear();
+            });
+        } else if (filterValue === 'this-week') {
+            const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - now.getDay());
+            const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (6 - now.getDay()));
+            filteredEvents = allEvents.filter(event => {
+                const eventDate = new Date(event.start_time);
+                return eventDate >= startOfWeek && eventDate <= endOfWeek;
+            });
+        } else if (filterValue === 'this-month') {
+             filteredEvents = allEvents.filter(event => {
+                const eventDate = new Date(event.start_time);
+                return eventDate.getMonth() === now.getMonth() && eventDate.getFullYear() === now.getFullYear();
+            });
+        }
+        renderEvents(filteredEvents);
+    });
+
+    document.getElementById("locationSelect").addEventListener("change", function() {
+      let selected = this.options[this.selectedIndex];
+      let url = selected.getAttribute("data-url") || "";
+      document.getElementById("locationUrl").value = url;
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+    const territorySelect = document.getElementById('territorySelect');
+    const addTerritoryBtn = document.getElementById('addTerritoryBtn');
+    const selectedTerritoriesContainer = document.getElementById('selectedTerritoriesContainer');
+    const noTerritoriesText = document.getElementById('noTerritoriesText');
+    const territoryInput = document.getElementById('territoryInput');
+
+    let selectedTerritories = new Set();
+
+    addTerritoryBtn.addEventListener('click', function() {
+        const selectedOption = territorySelect.options[territorySelect.selectedIndex];
+        const territoryNumber = selectedOption.value;
+        const territoryId = selectedOption.getAttribute('data-id');
+        
+        // Verifica si se seleccionó un territorio válido y si no ha sido agregado
+        if (territoryNumber && !selectedTerritories.has(territoryId)) {
+            selectedTerritories.add(territoryId);
+            
+            // Crea el chip del territorio
+            const chip = document.createElement('span');
+            chip.className = 'bg-highlight text-primary text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1';
+            chip.innerHTML = `
+                Territorio ${territoryNumber}
+                <button type="button" class="remove-chip text-primary hover:text-red-500 transition-colors duration-200" data-id="${territoryId}">&times;</button>
+            `;
+            
+            selectedTerritoriesContainer.appendChild(chip);
+            noTerritoriesText.classList.add('hidden');
+            
+            // Actualiza el campo de entrada oculto
+            updateHiddenInput();
+        }
+    });
+
+    // Delegación de eventos para eliminar chips
+    selectedTerritoriesContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-chip')) {
+            const territoryIdToRemove = event.target.getAttribute('data-id');
+            selectedTerritories.delete(territoryIdToRemove);
+            event.target.closest('span').remove();
+            
+            // Muestra el mensaje si no quedan territorios
+            if (selectedTerritories.size === 0) {
+                noTerritoriesText.classList.remove('hidden');
+            }
+            
+            updateHiddenInput();
+        }
+    });
+    
+    function updateHiddenInput() {
+        // Convierte el Set a una lista y luego a una cadena de texto
+        const territoryIdsArray = Array.from(selectedTerritories);
+        territoryInput.value = territoryIdsArray.join(',');
+        
+        // El atributo 'required' se maneja aquí
+        if (territoryIdsArray.length === 0) {
+            territoryInput.removeAttribute('name');
+        } else {
+            territoryInput.setAttribute('name', 'territories_list');
+        }
+    }
+});
+</script>
+{% endblock %}

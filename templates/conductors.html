@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6 md:p-10">
+  <h2 class="text-3xl font-extrabold mb-8 text-highlight border-b-2 border-gray-700 pb-2">
+    👤 Administrar Conductores
+  </h2>
+
+  <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
+    <h3 class="text-xl font-semibold mb-4 text-text">Agregar Nuevo Conductor</h3>
+    <form action="/conductors/add" method="post" class="flex flex-col md:flex-row gap-4">
+      <input 
+        type="text" 
+        name="name" 
+        placeholder="Ingresar nombre del conductor" 
+        class="flex-1 px-4 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" 
+        required
+      >
+      <button 
+        type="submit" 
+        class="bg-highlight px-6 py-2 rounded-md text-primary font-bold hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200"
+      >
+        <i class="fas fa-plus mr-2"></i>Agregar Conductor
+      </button>
+    </form>
+  </div>
+
+  <div class="bg-primary rounded-lg shadow-xl p-6 animate-fadeIn">
+    <h3 class="text-xl font-semibold mb-4 text-text">Lista de Conductores</h3>
+    <ul class="space-y-4">
+      {% for c in conductors %}
+      <li class="bg-gray-700/50 p-4 rounded-md flex justify-between items-center transition-all duration-200 hover:bg-gray-700">
+        <span class="text-lg">{{ c.name }}</span>
+        <a 
+          href="/conductors/delete/{{ c.id }}" 
+          class="text-red-400 hover:text-red-500 transition-colors duration-200"
+        >
+          <i class="fas fa-trash-alt text-lg"></i>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}

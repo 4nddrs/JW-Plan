@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Colores personalizados estilo Supabase --- */
+:root {
+    --color-bg-dark: #0F111A;
+    --color-sidebar: #131722;
+    --color-accent: #22D3EE;
+    --color-hover: #3B82F6;
+    --color-text: #E0E0E0;
+    --color-submenu-bg: #10131A;
+    --color-submenu-hover: #22D3EE;
+    --color-submenu-text-hover: #0F111A;
+}
+
+/* --- Componentes --- */
+.sidebar {
+    @apply w-64 p-4 flex-shrink-0 bg-[var(--color-sidebar)] text-[var(--color-text)] h-screen;
+}
+
+.sidebar h2 {
+    @apply text-2xl font-bold mb-6 text-[var(--color-accent)];
+}
+
+.menu-item > button {
+    @apply w-full flex justify-between items-center p-2 rounded-lg hover:bg-[var(--color-hover)] transition-colors;
+}
+
+.submenu {
+    @apply pl-4 mt-1 space-y-1 bg-[var(--color-submenu-bg)] rounded-lg hidden;
+}
+
+.submenu a {
+    @apply block p-2 rounded hover:bg-[var(--color-submenu-hover)] hover:text-[var(--color-submenu-text-hover)] transition-colors;
+}
+
+/* --- Tabla CRUD --- */
+.table-container {
+    @apply overflow-x-auto bg-[var(--color-bg-dark)] rounded-lg p-4 mt-4;
+}
+
+.table {
+    @apply min-w-full divide-y divide-gray-700;
+}
+
+.table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-[var(--color-text)] uppercase tracking-wider;
+}
+
+.table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-[var(--color-text)];
+}
+
+.table tr:nth-child(even) {
+    @apply bg-gray-800;
+}
+
+.table tr:hover {
+    @apply bg-[var(--color-hover)] text-[var(--color-bg-dark)];
+}
+
+/* --- Botones --- */
+.btn {
+    @apply px-4 py-2 rounded-lg text-[var(--color-bg-dark)] bg-[var(--color-accent)] hover:bg-[var(--color-hover)] transition-colors;
+}
+

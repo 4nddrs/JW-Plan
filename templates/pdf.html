@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6 md:p-10">
+    <h2 class="text-3xl font-extrabold mb-8 text-highlight border-b-2 border-gray-700 pb-2">
+        📥 Generar Reporte PDF
+    </h2>
+
+    <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
+        <h3 class="text-xl font-semibold mb-4 text-text">Selecciona el Mes</h3>
+        <form action="/generate_pdf" method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+            <div class="flex-1 w-full">
+                <label for="month_select" class="block mb-2 text-sm font-medium text-gray-300">Mes</label>
+                <select id="month_select" name="month" 
+                        class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-colors duration-200">
+                    <option value="1">Enero</option>
+                    <option value="2">Febrero</option>
+                    <option value="3">Marzo</option>
+                    <option value="4">Abril</option>
+                    <option value="5">Mayo</option>
+                    <option value="6">Junio</option>
+                    <option value="7">Julio</option>
+                    <option value="8">Agosto</option>
+                    <option value="9">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+            
+            <div class="flex-1 w-full">
+                <label for="year_select" class="block mb-2 text-sm font-medium text-gray-300">Año</label>
+                <select id="year_select" name="year" 
+                        class="w-full px-4 py-2 rounded-md bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-colors duration-200">
+                    <script>
+                        const currentYear = new Date().getFullYear();
+                        const yearSelect = document.getElementById('year_select');
+                        for (let i = 0; i < 5; i++) {
+                            const year = currentYear - i;
+                            const option = document.createElement('option');
+                            option.value = year;
+                            option.text = year;
+                            yearSelect.appendChild(option);
+                        }
+                    </script>
+                </select>
+            </div>
+
+            <button type="submit" 
+                    class="w-full md:w-auto bg-highlight px-6 py-3 rounded-md text-primary font-bold hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200">
+                <i class="fas fa-download mr-2"></i>Generar PDF
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

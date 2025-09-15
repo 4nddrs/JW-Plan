@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="p-6 md:p-10 text-center">
+  <div class="bg-primary rounded-lg shadow-xl p-8 mb-8 animate-fadeIn">
+    <h1 class="text-5xl font-extrabold mb-4 text-highlight">¡Bienvenido a tu JW-Schedule! 👋</h1>
+    <p class="text-xl text-text max-w-2xl mx-auto">
+      Tu herramienta para organizar y gestionar tus eventos de predicación y mucho más.
+      Diseñado para ser simple, rápido y efectivo.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+
+    <a href="/events" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">📅</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Eventos</h3>
+        <p class="text-gray-400">
+          Crea y administra tus eventos de predicación. Puedes filtrarlos, buscarlos y verlos por mes.
+        </p>
+      </div>
+    </a>
+
+    <a href="/conductors" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">👤</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Conductores</h3>
+        <p class="text-gray-400">
+          Lleva un registro de todos los conductores de los eventos para una mejor organización.
+        </p>
+      </div>
+    </a>
+
+    <a href="/locations" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">📍</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Ubicaciones</h3>
+        <p class="text-gray-400">
+          Gestiona las ubicaciones físicas donde se llevan a cabo los eventos, como Salones del Reino, etc.
+        </p>
+      </div>
+    </a>
+
+    <a href="/pdf" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">📄</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Generar PDF</h3>
+        <p class="text-gray-400">
+          Genera el programa en PDF de las salidas mensuales para llevar un control impreso.
+        </p>
+      </div>
+
+    <a href="/territories" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">🗺️</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Territorios</h3>
+        <p class="text-gray-400">
+          Administra los territorios que asignas a los eventos para tener un control completo.
+        </p>
+      </div>
+    </a>
+    <a href="/link" class="block">
+      <div class="bg-primary rounded-lg shadow-xl p-6 transition-transform duration-300 hover:scale-105 hover:bg-gray-700/50">
+        <div class="text-5xl mb-4 text-highlight">📤</div>
+        <h3 class="text-2xl font-semibold mb-2 text-text">Exportar a ICS</h3>
+        <p class="text-gray-400">
+          Exporta tus eventos a un archivo ICS para integrarlos con otras aplicaciones de calendario.
+        </p>
+      </div>
+
+  </div>
+</div>
+{% endblock %}
