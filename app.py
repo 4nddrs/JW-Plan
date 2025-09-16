@@ -409,7 +409,7 @@ def export_ics():
             # Evento Apple
             # =====================
             e_apple = Event()
-            e_apple.name = event_data.get("title", "Sin título")
+            e_apple.name = f"Predicación - {event_data.get('title', 'Sin título')}"
 
             # Fechas
             try:
@@ -440,7 +440,7 @@ def export_ics():
             # Evento Google
             # =====================
             e_google = Event()
-            e_google.name = event_data.get("title", "Sin título")
+            e_google.name = f"Predicación - {event_data.get('title', 'Sin título')}"
 
             # Fechas
             e_google.begin = e_apple.begin
@@ -465,11 +465,11 @@ def export_ics():
         # Crear ZIP con ambos archivos
         buffer = io.BytesIO()
         with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zf:
-            zf.writestr(f"calendario_apple_{start_of_month.strftime('%Y-%m')}.ics", cal_apple.serialize())
-            zf.writestr(f"calendario_google_{start_of_month.strftime('%Y-%m')}.ics", cal_google.serialize())
+            zf.writestr(f"calendario_apple.ics", cal_apple.serialize())
+            zf.writestr(f"calendario_google.ics", cal_google.serialize())
         buffer.seek(0)
 
-        filename = f"calendarios_{start_of_month.strftime('%Y-%m')}.zip"
+        filename = f"calendarios.zip"
         return send_file(buffer, as_attachment=True, download_name=filename, mimetype="application/zip")
 
     except Exception as e:
