@@ -560,6 +560,10 @@ def export_ics():
         print(f"Error al generar los ICS: {e}")
         return "Error al generar los archivos ICS.", 500
 
+@app.route('/site.webmanifest')
+def manifest():
+    return app.send_static_file('icons/site.webmanifest')
+
 
 if __name__ == "__main__":
     app.run(debug=True)
