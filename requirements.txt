@@ -25,6 +25,7 @@ google-resumable-media==2.7.2
 googleapis-common-protos==1.70.0
 grpcio==1.74.0
 grpcio-status==1.74.0
+gunicorn==23.0.0
 h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
@@ -40,6 +41,7 @@ MarkupSafe==3.0.2
 msgpack==1.1.1
 numpy==2.3.3
 openpyxl==3.1.5
+packaging==25.0
 pandas==2.3.2
 pillow==11.3.0
 proto-plus==1.26.1
@@ -50,6 +52,7 @@ pycparser==2.23
 PyJWT==2.10.1
 pyparsing==3.2.4
 python-dateutil==2.9.0.post0
+python-dotenv==1.1.1
 python-slugify==8.0.4
 pytz==2025.2
 reportlab==4.4.3
