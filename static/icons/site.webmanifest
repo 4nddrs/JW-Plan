@@ -4,8 +4,8 @@
   "description": "Planificación de predicaciones y horarios de JW",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1a73e8",
+  "background_color": "#111827",
+  "theme_color": "#111827",
   "orientation": "portrait-primary",
   "icons": [
     {
