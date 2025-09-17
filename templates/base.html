@@ -85,27 +85,38 @@
   </div>
 
   <script>
-    const sidebar = document.getElementById("sidebar");
-    const mainContent = document.getElementById("mainContent");
-    const isMobile = window.innerWidth < 768;
+  const sidebar = document.getElementById("sidebar");
+  const mainContent = document.getElementById("mainContent");
 
-    if (isMobile) {
-      // Toggle en modo móvil
-      const toggleButton = document.querySelector("#sidebar button");
-      toggleButton.style.display = 'block'; // Muestra el botón de hamburguesa
-      sidebar.classList.remove('w-20', 'hover:w-64', 'group');
-      sidebar.classList.add('w-64');
-      mainContent.classList.remove('md:ml-20', 'group-hover:md:ml-64');
+  // Detectar si es táctil
+  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-      toggleButton.addEventListener("click", () => {
-        sidebar.classList.toggle("-translate-x-full");
+  if (isTouch) {
+    // Forzar sidebar cerrado inicialmente
+    sidebar.classList.add("-translate-x-full");
+    sidebar.classList.remove("hover:w-64", "group");
+
+    // Crear botón 📅
+    const toggleBtn = document.createElement("button");
+    toggleBtn.textContent = "📅";
+    toggleBtn.className = "fixed top-4 left-4 z-50 text-primary p-2 rounded-md text-xl";
+    document.body.appendChild(toggleBtn);
+
+    toggleBtn.addEventListener("click", () => {
+      sidebar.classList.toggle("-translate-x-full");
+    });
+
+    // Interceptar enlaces para dejar terminar la animación
+    sidebar.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", e => {
+        e.preventDefault();
+        const url = link.getAttribute("href");
+        sidebar.classList.add("-translate-x-full");
+        setTimeout(() => window.location.href = url, 300); // esperar animación
       });
-    } else {
-      // Oculta el botón en desktop y ajusta el margen del contenido principal
-      const toggleButton = document.querySelector("#sidebar button");
-      toggleButton.style.display = 'none';
-      mainContent.classList.add('md:ml-20', 'group-hover:md:ml-64');
-    }
-  </script>
+    });
+  }
+</script>
+
 </body>
 </html>

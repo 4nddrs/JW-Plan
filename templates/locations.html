@@ -1,38 +1,106 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="p-6 md:p-10">
-    <h2 class="text-3xl font-extrabold mb-8 text-highlight border-b-2 border-gray-700 pb-2">
-        📍 Administrar Ubicaciones
-    </h2>
+  <h2 class="text-3xl font-extrabold mb-8 text-highlight border-b-2 border-gray-700 pb-2">
+    📍 Administrar Ubicaciones
+  </h2>
 
-    <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
-        <h3 class="text-xl font-semibold mb-4 text-text">Agregar Nueva Ubicación</h3>
-        <form action="/locations/add" method="post" class="flex flex-col md:flex-row gap-4">
-            <input type="text" name="name" placeholder="Nombre de la nueva ubicación" 
-                   class="flex-1 px-4 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" 
-                   required>
-            <button type="submit" 
-                    class="bg-highlight px-6 py-3 rounded-md text-primary font-bold hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200">
-                <i class="fas fa-plus mr-2"></i>Agregar Ubicación
-            </button>
+  <!-- Formulario: Agregar nueva ubicación -->
+  <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
+    <h3 class="text-xl font-semibold mb-4 text-text">Agregar Nueva Ubicación</h3>
+    <form action="/locations/add" method="post" class="flex flex-col md:flex-row gap-4">
+      <input 
+        type="text" 
+        name="name" 
+        placeholder="Nombre de la ubicación" 
+        class="flex-1 px-4 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200" 
+        required
+      >
+      <input 
+        type="url" 
+        name="url" 
+        placeholder="URL de la ubicación" 
+        class="flex-1 px-4 py-2 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-highlight focus:border-transparent transition-all duration-200"
+        required
+      >
+      <button 
+        type="submit" 
+        class="bg-highlight px-6 py-3 rounded-md text-primary font-bold hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-colors duration-200"
+      >
+        <i class="fas fa-plus mr-2"></i>Agregar Ubicación
+      </button>
+    </form>
+  </div>
+
+  <!-- Lista de ubicaciones -->
+  <div class="bg-primary rounded-lg shadow-xl p-6 animate-fadeIn">
+    <h3 class="text-xl font-semibold mb-4 text-text">Lista de Ubicaciones</h3>
+    <ul class="space-y-4">
+      {% for loc in locations %}
+      <li id="location-{{ loc.id }}" class="bg-gray-700/50 p-4 rounded-md flex flex-col md:flex-row md:justify-between md:items-center transition-all duration-200 hover:bg-gray-700">
+        
+        <!-- Vista normal -->
+        <div id="location-display-{{ loc.id }}" class="flex flex-col">
+          <p class="font-semibold text-lg text-highlight">{{ loc.name }}</p>
+          <a href="{{ loc.url }}" target="_blank" class="text-blue-400 hover:underline">{{ loc.url }}</a>
+        </div>
+
+        <!-- Formulario de edición -->
+        <form 
+          id="edit-form-{{ loc.id }}" 
+          action="/locations/update/{{ loc.id }}" 
+          method="post" 
+          class="hidden flex flex-col md:flex-row gap-2 mt-2 md:mt-0"
+        >
+          <input 
+            type="text" 
+            name="name" 
+            value="{{ loc.name }}" 
+            class="px-3 py-2 rounded-md bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-all duration-200"
+            required
+          >
+          <input 
+            type="url" 
+            name="url" 
+            value="{{ loc.url }}" 
+            class="px-3 py-2 rounded-md bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-all duration-200"
+            required
+          >
+          <button type="submit" class="bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-white transition">
+            <i class="fas fa-check"></i>
+          </button>
+          <button type="button" onclick="cancelEdit('{{ loc.id }}')" class="bg-gray-500 hover:bg-gray-600 px-3 py-2 rounded-md text-white transition">
+            <i class="fas fa-times"></i>
+          </button>
         </form>
-    </div>
 
-    <div class="bg-primary rounded-lg shadow-xl p-6 animate-fadeIn">
-        <h3 class="text-xl font-semibold mb-4 text-text">Lista de Ubicaciones</h3>
-        <ul class="space-y-4">
-            {% for loc in locations %}
-            <li class="bg-gray-700/50 p-4 rounded-md flex flex-col md:flex-row md:justify-between md:items-center transition-all duration-200 hover:bg-gray-700">
-                <div class="mb-2 md:mb-0">
-                    <p class="font-semibold text-lg text-highlight">{{ loc.name }}</p>
-                </div>
-                <a href="/locations/delete/{{ loc.id }}" 
-                   class="text-red-400 hover:text-red-500 transition-colors duration-200 mt-2 md:mt-0 self-end md:self-auto">
-                    <i class="fas fa-trash-alt text-lg"></i>
-                </a>
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
+        <!-- Botones acciones -->
+        <div id="actions-{{ loc.id }}" class="flex gap-4 mt-2 md:mt-0">
+          <button onclick="enableEdit('{{ loc.id }}')" class="text-blue-400 hover:text-blue-500 transition-colors duration-200">
+            <i class="fas fa-edit text-lg"></i>
+          </button>
+          <a href="/locations/delete/{{ loc.id }}" class="text-red-400 hover:text-red-500 transition-colors duration-200">
+            <i class="fas fa-trash-alt text-lg"></i>
+          </a>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
 </div>
+
+<!-- Script edición inline -->
+<script>
+  function enableEdit(id) {
+    document.getElementById("location-display-" + id).classList.add("hidden");
+    document.getElementById("actions-" + id).classList.add("hidden");
+    document.getElementById("edit-form-" + id).classList.remove("hidden");
+  }
+
+  function cancelEdit(id) {
+    document.getElementById("edit-form-" + id).classList.add("hidden");
+    document.getElementById("location-display-" + id).classList.remove("hidden");
+    document.getElementById("actions-" + id).classList.remove("hidden");
+  }
+</script>
 {% endblock %}

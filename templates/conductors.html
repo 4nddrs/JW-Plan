@@ -5,6 +5,7 @@
     👤 Administrar Conductores
   </h2>
 
+  <!-- Formulario: Agregar Conductor -->
   <div class="bg-primary rounded-lg shadow-xl p-6 mb-8 animate-fadeIn">
     <h3 class="text-xl font-semibold mb-4 text-text">Agregar Nuevo Conductor</h3>
     <form action="/conductors/add" method="post" class="flex flex-col md:flex-row gap-4">
@@ -24,21 +25,68 @@
     </form>
   </div>
 
+  <!-- Lista de Conductores -->
   <div class="bg-primary rounded-lg shadow-xl p-6 animate-fadeIn">
     <h3 class="text-xl font-semibold mb-4 text-text">Lista de Conductores</h3>
     <ul class="space-y-4">
       {% for c in conductors %}
-      <li class="bg-gray-700/50 p-4 rounded-md flex justify-between items-center transition-all duration-200 hover:bg-gray-700">
-        <span class="text-lg">{{ c.name }}</span>
-        <a 
-          href="/conductors/delete/{{ c.id }}" 
-          class="text-red-400 hover:text-red-500 transition-colors duration-200"
+      <li id="conductor-{{ c.id }}" class="bg-gray-700/50 p-4 rounded-md flex justify-between items-center transition-all duration-200 hover:bg-gray-700">
+        
+        <!-- Nombre del conductor (modo lectura) -->
+        <span class="text-lg font-medium text-white" id="name-display-{{ c.id }}">{{ c.name }}</span>
+
+        <!-- Formulario de edición (oculto por defecto) -->
+        <form 
+          id="edit-form-{{ c.id }}" 
+          action="/conductors/update/{{ c.id }}" 
+          method="post" 
+          class="hidden flex-1 flex justify-between items-center gap-2"
         >
-          <i class="fas fa-trash-alt text-lg"></i>
-        </a>
+          <input 
+            type="text" 
+            name="name" 
+            value="{{ c.name }}" 
+            class="flex-1 px-3 py-2 rounded-md bg-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-highlight transition-all duration-200"
+            required
+          >
+          <button type="submit" class="bg-green-500 hover:bg-green-600 px-3 py-2 rounded-md text-white transition">
+            <i class="fas fa-check"></i>
+          </button>
+          <button type="button" onclick="cancelEdit('{{ c.id }}')" class="bg-gray-500 hover:bg-gray-600 px-3 py-2 rounded-md text-white transition">
+            <i class="fas fa-times"></i>
+          </button>
+        </form>
+
+        <!-- Acciones -->
+        <div id="actions-{{ c.id }}" class="flex gap-4">
+          <button onclick="enableEdit('{{ c.id }}')" class="text-blue-400 hover:text-blue-500 transition-colors duration-200">
+            <i class="fas fa-edit text-lg"></i>
+          </button>
+          <a 
+            href="/conductors/delete/{{ c.id }}" 
+            class="text-red-400 hover:text-red-500 transition-colors duration-200"
+          >
+            <i class="fas fa-trash-alt text-lg"></i>
+          </a>
+        </div>
       </li>
       {% endfor %}
     </ul>
   </div>
 </div>
+
+<!-- Script para manejar edición inline -->
+<script>
+  function enableEdit(id) {
+    document.getElementById("name-display-" + id).classList.add("hidden");
+    document.getElementById("actions-" + id).classList.add("hidden");
+    document.getElementById("edit-form-" + id).classList.remove("hidden");
+  }
+
+  function cancelEdit(id) {
+    document.getElementById("edit-form-" + id).classList.add("hidden");
+    document.getElementById("name-display-" + id).classList.remove("hidden");
+    document.getElementById("actions-" + id).classList.remove("hidden");
+  }
+</script>
 {% endblock %}

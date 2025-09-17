@@ -60,7 +60,8 @@ def locations():
 @app.route("/locations/add", methods=["POST"])
 def add_location():
     name = request.form.get("name")
-    db.collection("locations").add({"name": name})
+    url = request.form.get("url")
+    db.collection("locations").add({"name": name, "url": url})
     return redirect(url_for("locations"))
 
 
@@ -68,6 +69,15 @@ def add_location():
 def delete_location(id):
     db.collection("locations").document(id).delete()
     return redirect(url_for("locations"))
+
+
+@app.route("/locations/update/<id>", methods=["POST"])
+def update_location(id):
+    name = request.form.get("name")
+    url = request.form.get("url")
+    db.collection("locations").document(id).update({"name": name, "url": url})
+    return redirect(url_for("locations"))
+
 
 
 # --- Conductors ---
@@ -91,12 +101,30 @@ def delete_conductor(id):
     return redirect(url_for("conductors"))
 
 
+@app.route("/conductors/edit/<id>")
+def edit_conductor(id):
+    doc = db.collection("conductors").document(id).get()
+    if not doc.exists:
+        return redirect(url_for("conductors"))
+    data = {"id": doc.id, **doc.to_dict()}
+    return render_template("edit_conductor.html", conductor=data)
+
+
+@app.route("/conductors/update/<id>", methods=["POST"])
+def update_conductor(id):
+    name = request.form.get("name")
+    db.collection("conductors").document(id).update({"name": name})
+    return redirect(url_for("conductors"))
+
+
+
 # --- Territories ---
 @app.route("/territories")
 def territories():
-    docs = db.collection("territories").stream()
+    docs = db.collection("territories").order_by("number").stream()
     data = [{"id": doc.id, **doc.to_dict()} for doc in docs]
     return render_template("territories.html", territories=data)
+
 
 
 @app.route("/territories/add", methods=["POST"])
@@ -121,7 +149,13 @@ def events_view():
     # Pre-fetch all related data and store it in dictionaries for fast lookups
     locations = {loc["id"]: loc for loc in get_all("locations")}
     conductors = {con["id"]: con for con in get_all("conductors")}
-    territories = {ter["id"]: ter for ter in get_all("territories")}
+    territories_list = sorted(
+    get_all("territories"),
+    key=lambda ter: ter["number"],
+    reverse=False  # True = descendente
+)
+
+    territories = {ter["id"]: ter for ter in territories_list}
 
     for event in events:
         try:
