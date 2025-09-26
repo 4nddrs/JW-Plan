@@ -176,14 +176,7 @@
     }
 
     window.onload = () => {
-        const today = new Date();
-        const currentMonthYear = today.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-        const initialEvents = allEvents.filter(event => {
-            const eventDate = new Date(event.start_time);
-            const eventMonthYear = eventDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-            return eventMonthYear === currentMonthYear;
-        });
-        renderEvents(initialEvents);
+        renderEvents(allEvents);
     };
 
     searchInput.addEventListener('input', () => {
