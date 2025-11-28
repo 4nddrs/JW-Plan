@@ -181,7 +181,12 @@ def events_view():
 def add_event():
     # Obtener los datos del formulario
     title = request.form["title"]
-    start_time = request.form["start_time"]
+    start_date = request.form["start_date"]  # Formato: YYYY-MM-DD
+    start_time_only = request.form["start_time"]  # Formato: HH:MM
+    
+    # Combinar fecha y hora en el formato requerido
+    start_time = f"{start_date}T{start_time_only}"
+    
     location_id = request.form["location_id"]
     conductor_id = request.form["conductor_id"]
 
@@ -243,8 +248,8 @@ def generate_pdf_from_firestore(year, month, events_data):
     header_height = 25
     interlineado = 15
     espacio_entre_eventos = 8
-    cell_height_deseado = 210
-    cell_width_deseado = 270
+    cell_height_deseado = 250  # Aumentado para aprovechar mejor la hoja
+    cell_width_deseado = 310  # Aumentado para hacer el calendario más ancho
 
     # --- Mes actual ---
     primer_dia = datetime(year, month, 1).date()
@@ -276,20 +281,29 @@ def generate_pdf_from_firestore(year, month, events_data):
         return tuple(int(hex_color[i : i + 2], 16) / 255 for i in (0, 2, 4))
 
     # --- Colores suaves ---
-    color1 = hex_to_rgb("#B9DBFF")
-    color2 = hex_to_rgb("#CCE5FF")
+    color1 = hex_to_rgb("#B9DBFF")  # Azul muy suave
+    color2 = hex_to_rgb("#CCE5FF")  # Azul casi blanco
 
     # --- Color de tag de ejemplo ---
     tag_colors = {
         "Viloma Cala Cala": hex_to_rgb("#FFDFAF"),
+        "Asamblea de Circuito": hex_to_rgb("#C2FFE1"),
+        "Asamblea Regional": hex_to_rgb("#D8C7E9"),
     }
 
-    # --- Título centrado ---
+    # --- Nombres de meses en español ---
+    meses_es = {
+        1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
+        5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
+        9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre"
+    }
+
+    # --- Título centrado en español ---
     c.setFont("Helvetica-Bold", 28)
     c.drawCentredString(
         width / 2,
         height - margin_top / 2,
-        f"Calendario {primer_dia.strftime('%B %Y').capitalize()}",
+        f"PROGRAMA DE PREDICACIÓN - CONGREGACION MAGNOLIAS - {meses_es[month].upper()} {year}",
     )
 
     # --- Cabecera de días ---
@@ -306,23 +320,10 @@ def generate_pdf_from_firestore(year, month, events_data):
     for i, dia in enumerate(dias_semana):
         x = margin_side + i * cell_width_deseado
         y = height - margin_top - header_height
-        c.setFillColorRGB(0.85, 0.85, 0.85)
+        c.setFillColorRGB(0.92, 0.92, 0.92)  # Gris más suave
         c.rect(x, y, cell_width_deseado, header_height, fill=1, stroke=0)
         c.setFillColorRGB(0, 0, 0)
         c.drawCentredString(x + cell_width_deseado / 2, y + 7, dia)
-
-    # --- Leyenda de tags ---
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(
-        margin_side, height - margin_top - header_height - 20, "Leyenda de Tags:"
-    )
-    y_leyenda = height - margin_top - header_height - 40
-    for tag, color in tag_colors.items():
-        c.setFillColorRGB(*color)
-        c.rect(margin_side, y_leyenda, 50, 15, fill=1, stroke=0)
-        c.setFillColorRGB(0, 0, 0)
-        c.drawString(margin_side + 55, y_leyenda, tag)
-        y_leyenda -= 20
 
     # --- Grilla de días ---
     c.setFont("Helvetica", 11)
@@ -353,8 +354,8 @@ def generate_pdf_from_firestore(year, month, events_data):
         c.rect(x, y, cell_width_deseado, cell_height_deseado)
 
         # Número del día
-        c.setFont("Helvetica-Bold", 18)
-        c.drawString(x + 2, y + cell_height_deseado - 16, str(dia_actual.day))
+        c.setFont("Helvetica-Bold", 22)
+        c.drawString(x + 4, y + cell_height_deseado - 24, str(dia_actual.day))
         c.setFont("Helvetica", 11)
 
         # --- Dibujar eventos ---
@@ -374,16 +375,16 @@ def generate_pdf_from_firestore(year, month, events_data):
             # Título y hora en negrita
             titulo = evento.get("title", "")
             if titulo:
-                c.setFont("Helvetica-Bold", 16)
+                c.setFont("Helvetica-Bold", 17)
                 texto = f"{hora_dt.strftime('%H:%M')} - {titulo}"
                 x_centrado = (
                     x
-                    + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", 13))
+                    + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", 17))
                     / 2
                 )
                 c.drawString(x_centrado, y_text, texto)
                 y_text -= interlineado
-                c.setFont("Helvetica", 14)
+                c.setFont("Helvetica", 15)
 
             # Atributos del evento
             atributos = {
@@ -401,7 +402,7 @@ def generate_pdf_from_firestore(year, month, events_data):
                         x
                         + (
                             cell_width_deseado
-                            - c.stringWidth(texto_attr, "Helvetica", 13)
+                            - c.stringWidth(texto_attr, "Helvetica", 15)
                         )
                         / 2
                     )
@@ -415,8 +416,8 @@ def generate_pdf_from_firestore(year, month, events_data):
                             (
                                 x_centrado,
                                 y_text,
-                                x_centrado + c.stringWidth(texto_attr, "Helvetica", 12),
-                                y_text + 12,
+                                x_centrado + c.stringWidth(texto_attr, "Helvetica", 15),
+                                y_text + 15,
                             ),
                         )
 
