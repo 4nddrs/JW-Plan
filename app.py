@@ -238,18 +238,21 @@ def delete_event(id):
 def generate_pdf_from_firestore(year, month, events_data):
     """Genera un PDF del calendario a partir de los datos de Firestore."""
 
+    # --- Factor de escala para hacer todo proporcionalmente más grande ---
+    escala = 1.3  # Aumenta este valor para hacer todo más grande (1.0 = tamaño original)
+
     # --- Márgenes ---
-    margin_top = 0.7 * inch
-    margin_bottom = 0.5 * inch
-    margin_side = 0.5 * inch
+    margin_top = 0.7 * inch * escala
+    margin_bottom = 0.5 * inch * escala
+    margin_side = 0.5 * inch * escala
 
     # --- Configuración general ---
     cols = 7
-    header_height = 25
-    interlineado = 15
-    espacio_entre_eventos = 8
-    cell_height_deseado = 250  # Aumentado para aprovechar mejor la hoja
-    cell_width_deseado = 310  # Aumentado para hacer el calendario más ancho
+    header_height = 25 * escala
+    interlineado = 17 * escala
+    espacio_entre_eventos = 8 * escala
+    cell_height_deseado = 250 * escala  # Aumentado para aprovechar mejor la hoja
+    cell_width_deseado = 310 * escala  # Aumentado para hacer el calendario más ancho
 
     # --- Mes actual ---
     primer_dia = datetime(year, month, 1).date()
@@ -284,12 +287,8 @@ def generate_pdf_from_firestore(year, month, events_data):
     color1 = hex_to_rgb("#B9DBFF")  # Azul muy suave
     color2 = hex_to_rgb("#CCE5FF")  # Azul casi blanco
 
-    # --- Color de tag de ejemplo ---
-    tag_colors = {
-        "Viloma Cala Cala": hex_to_rgb("#FFDFAF"),
-        "Asamblea de Circuito": hex_to_rgb("#C2FFE1"),
-        "Asamblea Regional": hex_to_rgb("#D8C7E9"),
-    }
+    # --- Eventos especiales que se mostrarán en negrita y mayúsculas ---
+    eventos_especiales = ["Viloma Cala Cala", "Asamblea de Circuito", "Asamblea Regional"]
 
     # --- Nombres de meses en español ---
     meses_es = {
@@ -299,7 +298,7 @@ def generate_pdf_from_firestore(year, month, events_data):
     }
 
     # --- Título centrado en español ---
-    c.setFont("Helvetica-Bold", 28)
+    c.setFont("Helvetica-Bold", int(28 * escala))
     c.drawCentredString(
         width / 2,
         height - margin_top / 2,
@@ -316,17 +315,17 @@ def generate_pdf_from_firestore(year, month, events_data):
         "Sábado",
         "Domingo",
     ]
-    c.setFont("Helvetica-Bold", 18)
+    c.setFont("Helvetica-Bold", int(18 * escala))
     for i, dia in enumerate(dias_semana):
         x = margin_side + i * cell_width_deseado
         y = height - margin_top - header_height
         c.setFillColorRGB(0.92, 0.92, 0.92)  # Gris más suave
         c.rect(x, y, cell_width_deseado, header_height, fill=1, stroke=0)
         c.setFillColorRGB(0, 0, 0)
-        c.drawCentredString(x + cell_width_deseado / 2, y + 7, dia)
+        c.drawCentredString(x + cell_width_deseado / 2, y + 7 * escala, dia)
 
     # --- Grilla de días ---
-    c.setFont("Helvetica", 11)
+    c.setFont("Helvetica", int(11 * escala))
     for idx, dia_actual in enumerate(dias_mes):
         weekday = dia_actual.weekday()
         row = ((idx + primer_weekday) // cols) + 1
@@ -336,16 +335,8 @@ def generate_pdf_from_firestore(year, month, events_data):
 
         eventos_dia = [e for e in events_data if e["start_time"].date() == dia_actual]
 
-        # --- Color de fondo: alternancia y tags ---
+        # --- Color de fondo: alternancia simple ---
         color_fondo = color1 if idx % 2 == 0 else color2
-        for evento in eventos_dia:
-            titulo = evento.get("title", "")
-            for tag, color in tag_colors.items():
-                if tag in titulo:
-                    color_fondo = color
-                    break
-            if color_fondo in tag_colors.values():
-                break
 
         # Dibujar celda
         c.setFillColorRGB(*color_fondo)
@@ -354,76 +345,100 @@ def generate_pdf_from_firestore(year, month, events_data):
         c.rect(x, y, cell_width_deseado, cell_height_deseado)
 
         # Número del día
-        c.setFont("Helvetica-Bold", 22)
-        c.drawString(x + 4, y + cell_height_deseado - 24, str(dia_actual.day))
-        c.setFont("Helvetica", 11)
+        c.setFont("Helvetica-Bold", int(22 * escala))
+        c.drawString(x + 4 * escala, y + cell_height_deseado - 24 * escala, str(dia_actual.day))
+        c.setFont("Helvetica", int(11 * escala))
 
         # --- Dibujar eventos ---
-        for idx_ev, evento in enumerate(eventos_dia):
+        # Agrupar eventos por hora para posicionarlos correctamente
+        eventos_agrupados = {}
+        for evento in eventos_dia:
             hora_dt = evento["start_time"]
-
-            # Posición vertical basada en la hora
+            # Agrupar por rango horario
             if 6 <= hora_dt.hour < 12:
-                y_base = y + cell_height_deseado * 0.75 + 24
+                rango = "manana"
             elif 12 <= hora_dt.hour < 18:
-                y_base = y + cell_height_deseado * 0.5 + 21
+                rango = "tarde"
             else:
-                y_base = y + cell_height_deseado * 0.25 + 18
+                rango = "noche"
+            
+            if rango not in eventos_agrupados:
+                eventos_agrupados[rango] = []
+            eventos_agrupados[rango].append(evento)
+        
+        # Procesar cada grupo de eventos
+        for rango, eventos_grupo in eventos_agrupados.items():
+            # Determinar y_base según el rango horario
+            if rango == "manana":
+                y_base = y + cell_height_deseado * 0.80 + 24 * escala
+            elif rango == "tarde":
+                y_base = y + cell_height_deseado * 0.50 + 21 * escala
+            else:  # noche
+                y_base = y + cell_height_deseado * 0.15 + 18 * escala
+            
+            # Dibujar cada evento del grupo
+            for idx_grupo, evento in enumerate(eventos_grupo):
+                hora_dt = evento["start_time"]
+                y_text = y_base - idx_grupo * 70 * escala  # Espacio suficiente para que no se solapen (título + 3 atributos)
 
-            y_text = y_base - idx_ev * espacio_entre_eventos
-
-            # Título y hora en negrita
-            titulo = evento.get("title", "")
-            if titulo:
-                c.setFont("Helvetica-Bold", 17)
-                texto = f"{hora_dt.strftime('%H:%M')} - {titulo}"
-                x_centrado = (
-                    x
-                    + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", 17))
-                    / 2
-                )
-                c.drawString(x_centrado, y_text, texto)
-                y_text -= interlineado
-                c.setFont("Helvetica", 15)
-
-            # Atributos del evento
-            atributos = {
-                "Conductor": evento.get("conductor_name"),
-                "Ubicación": evento.get("location_name"),
-                "Territorio": f"{evento.get('territory_number')}"
-                if evento.get("territory_number")
-                else None,
-            }
-
-            for col_name, valor in atributos.items():
-                if valor:
-                    texto_attr = f"{col_name}: {valor}"
+                # Título y hora
+                titulo = evento.get("title", "")
+                if titulo:
+                    # Verificar si es un evento especial para aplicar formato especial
+                    es_especial = any(tag in titulo for tag in eventos_especiales)
+                    
+                    if es_especial:
+                        titulo = titulo.upper()
+                        c.setFont("Helvetica-Bold", int(17 * escala))
+                    else:
+                        c.setFont("Helvetica-Bold", int(17 * escala))
+                    
+                    texto = f"{hora_dt.strftime('%H:%M')} - {titulo}"
                     x_centrado = (
                         x
-                        + (
-                            cell_width_deseado
-                            - c.stringWidth(texto_attr, "Helvetica", 15)
-                        )
+                        + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", int(17 * escala)))
                         / 2
                     )
-                    c.drawString(x_centrado, y_text, texto_attr)
-
-                    # URL clicable para la ubicación
-                    if col_name == "Ubicación" and evento.get("url"):
-                        url = evento["url"]
-                        c.linkURL(
-                            url,
-                            (
-                                x_centrado,
-                                y_text,
-                                x_centrado + c.stringWidth(texto_attr, "Helvetica", 15),
-                                y_text + 15,
-                            ),
-                        )
-
+                    c.drawString(x_centrado, y_text, texto)
                     y_text -= interlineado
+                    c.setFont("Helvetica", int(17 * escala))
 
-            y_text -= espacio_entre_eventos
+                # Atributos del evento
+                atributos = {
+                    "Conductor": evento.get("conductor_name"),
+                    "Lugar": evento.get("location_name"),
+                    "Territorio": f"{evento.get('territory_number')}"
+                    if evento.get("territory_number")
+                    else None,
+                }
+
+                for col_name, valor in atributos.items():
+                    if valor:
+                        texto_attr = f"{col_name}: {valor}"
+                        x_centrado = (
+                            x
+                            + (
+                                cell_width_deseado
+                                - c.stringWidth(texto_attr, "Helvetica", int(15 * escala))
+                            )
+                            / 2
+                        )
+                        c.drawString(x_centrado, y_text, texto_attr)
+
+                        # URL clicable para la ubicación
+                        if col_name == "Lugar" and evento.get("url"):
+                            url = evento["url"]
+                            c.linkURL(
+                                url,
+                                (
+                                    x_centrado,
+                                    y_text,
+                                    x_centrado + c.stringWidth(texto_attr, "Helvetica", int(15 * escala)),
+                                    y_text + 15 * escala,
+                                ),
+                            )
+
+                        y_text -= interlineado
 
     c.save()
     buffer.seek(0)
