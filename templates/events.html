@@ -17,6 +17,12 @@
           <option value="Pública">Pública</option>
           <option value="Cartas">Cartas</option>
           <option value="Viloma Cala Cala">Viloma Cala Cala</option>
+          <option value="Visita al Grupo 1">Visita al Grupo 1</option>
+          <option value="Visita al Grupo 2">Visita al Grupo 2</option>
+          <option value="Visita al Grupo 3">Visita al Grupo 3</option>
+          <option value="Visita al Grupo 4">Visita al Grupo 4</option>
+          <option value="Visita al Grupo 5">Visita al Grupo 5</option>
+          <option value="Visita al Grupo 6">Visita al Grupo 6</option>
           <option value="Asamblea de Circuito">Asamblea de Circuito</option>
           <option value="Asamblea Regional">Asamblea Regional</option>
         </select>
@@ -131,7 +137,11 @@
             return;
         }
 
-        const groupedEvents = eventsToRender.reduce((acc, event) => {
+        const sortedEvents = [...eventsToRender].sort((a, b) => {
+            return new Date(a.start_time) - new Date(b.start_time);
+        });
+
+        const groupedEvents = sortedEvents.reduce((acc, event) => {
             const date = new Date(event.start_time);
             const monthYear = date.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
             if (!acc[monthYear]) {
@@ -141,7 +151,7 @@
             return acc;
         }, {});
 
-        for (const monthYear in groupedEvents) {
+        for (const monthYear of Object.keys(groupedEvents)) {
             const monthSection = document.createElement('div');
             monthSection.className = "bg-primary rounded-lg shadow-xl p-6 animate-fadeIn space-y-4";
             

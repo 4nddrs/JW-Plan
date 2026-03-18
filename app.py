@@ -239,7 +239,11 @@ def generate_pdf_from_firestore(year, month, events_data):
     """Genera un PDF del calendario a partir de los datos de Firestore."""
 
     # --- Factor de escala para hacer todo proporcionalmente más grande ---
-    escala = 1.3  # Aumenta este valor para hacer todo más grande (1.0 = tamaño original)
+    escala = 1.6  # Escala global mayor para mejorar lectura al imprimir
+    escala_fuente = 1.15  # Ajuste fino para aumentar un poco más la tipografía
+
+    def font_size(base_size):
+        return int(base_size * escala * escala_fuente)
 
     # --- Márgenes ---
     margin_top = 0.7 * inch * escala
@@ -249,7 +253,7 @@ def generate_pdf_from_firestore(year, month, events_data):
     # --- Configuración general ---
     cols = 7
     header_height = 25 * escala
-    interlineado = 17 * escala
+    interlineado = 20 * escala
     espacio_entre_eventos = 8 * escala
     cell_height_deseado = 250 * escala  # Aumentado para aprovechar mejor la hoja
     cell_width_deseado = 310 * escala  # Aumentado para hacer el calendario más ancho
@@ -283,9 +287,9 @@ def generate_pdf_from_firestore(year, month, events_data):
         hex_color = hex_color.lstrip("#")
         return tuple(int(hex_color[i : i + 2], 16) / 255 for i in (0, 2, 4))
 
-    # --- Colores suaves ---
-    color1 = hex_to_rgb("#B9DBFF")  # Azul muy suave
-    color2 = hex_to_rgb("#CCE5FF")  # Azul casi blanco
+    # --- Colores suaves (nuevo contraste blanco + gris) ---
+    color1 = hex_to_rgb("#FFFFFF")  # Blanco
+    color2 = hex_to_rgb("#F2F2F2")  # Gris suave
 
     # --- Eventos especiales que se mostrarán en negrita y mayúsculas ---
     eventos_especiales = ["Viloma Cala Cala", "Asamblea de Circuito", "Asamblea Regional"]
@@ -298,7 +302,7 @@ def generate_pdf_from_firestore(year, month, events_data):
     }
 
     # --- Título centrado en español ---
-    c.setFont("Helvetica-Bold", int(28 * escala))
+    c.setFont("Helvetica-Bold", font_size(28))
     c.drawCentredString(
         width / 2,
         height - margin_top / 2,
@@ -315,7 +319,7 @@ def generate_pdf_from_firestore(year, month, events_data):
         "Sábado",
         "Domingo",
     ]
-    c.setFont("Helvetica-Bold", int(18 * escala))
+    c.setFont("Helvetica-Bold", font_size(18))
     for i, dia in enumerate(dias_semana):
         x = margin_side + i * cell_width_deseado
         y = height - margin_top - header_height
@@ -325,7 +329,7 @@ def generate_pdf_from_firestore(year, month, events_data):
         c.drawCentredString(x + cell_width_deseado / 2, y + 7 * escala, dia)
 
     # --- Grilla de días ---
-    c.setFont("Helvetica", int(11 * escala))
+    c.setFont("Helvetica", font_size(11))
     for idx, dia_actual in enumerate(dias_mes):
         weekday = dia_actual.weekday()
         row = ((idx + primer_weekday) // cols) + 1
@@ -345,9 +349,9 @@ def generate_pdf_from_firestore(year, month, events_data):
         c.rect(x, y, cell_width_deseado, cell_height_deseado)
 
         # Número del día
-        c.setFont("Helvetica-Bold", int(22 * escala))
+        c.setFont("Helvetica-Bold", font_size(22))
         c.drawString(x + 4 * escala, y + cell_height_deseado - 24 * escala, str(dia_actual.day))
-        c.setFont("Helvetica", int(11 * escala))
+        c.setFont("Helvetica", font_size(11))
 
         # --- Dibujar eventos ---
         # Agrupar eventos por hora para posicionarlos correctamente
@@ -366,42 +370,38 @@ def generate_pdf_from_firestore(year, month, events_data):
                 eventos_agrupados[rango] = []
             eventos_agrupados[rango].append(evento)
         
-        # Procesar cada grupo de eventos
-        for rango, eventos_grupo in eventos_agrupados.items():
-            # Determinar y_base según el rango horario
-            if rango == "manana":
-                y_base = y + cell_height_deseado * 0.80 + 24 * escala
-            elif rango == "tarde":
-                y_base = y + cell_height_deseado * 0.50 + 21 * escala
-            else:  # noche
-                y_base = y + cell_height_deseado * 0.15 + 18 * escala
-            
-            # Dibujar cada evento del grupo
-            for idx_grupo, evento in enumerate(eventos_grupo):
+        # Procesar grupos en orden fijo para mantener separaciones estables
+        rangos_ordenados = [
+            ("manana", y + cell_height_deseado * 0.80 + 34 * escala),
+            ("tarde", y + cell_height_deseado * 0.50 + 21 * escala),
+            ("noche", y + cell_height_deseado * 0.15 + 18 * escala),
+        ]
+
+        for rango, y_base in rangos_ordenados:
+            eventos_grupo = eventos_agrupados.get(rango, [])
+            y_cursor = y_base
+
+            for evento in sorted(eventos_grupo, key=lambda e: e["start_time"]):
                 hora_dt = evento["start_time"]
-                y_text = y_base - idx_grupo * 70 * escala  # Espacio suficiente para que no se solapen (título + 3 atributos)
+                y_text = y_cursor
 
                 # Título y hora
                 titulo = evento.get("title", "")
                 if titulo:
-                    # Verificar si es un evento especial para aplicar formato especial
                     es_especial = any(tag in titulo for tag in eventos_especiales)
-                    
                     if es_especial:
                         titulo = titulo.upper()
-                        c.setFont("Helvetica-Bold", int(17 * escala))
-                    else:
-                        c.setFont("Helvetica-Bold", int(17 * escala))
-                    
+
+                    c.setFont("Helvetica-Bold", font_size(17))
                     texto = f"{hora_dt.strftime('%H:%M')} - {titulo}"
                     x_centrado = (
                         x
-                        + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", int(17 * escala)))
+                        + (cell_width_deseado - c.stringWidth(texto, "Helvetica-Bold", font_size(17)))
                         / 2
                     )
                     c.drawString(x_centrado, y_text, texto)
                     y_text -= interlineado
-                    c.setFont("Helvetica", int(17 * escala))
+                    c.setFont("Helvetica", font_size(17))
 
                 # Atributos del evento
                 atributos = {
@@ -412,6 +412,8 @@ def generate_pdf_from_firestore(year, month, events_data):
                     else None,
                 }
 
+                lineas_atributos = sum(1 for valor in atributos.values() if valor)
+
                 for col_name, valor in atributos.items():
                     if valor:
                         texto_attr = f"{col_name}: {valor}"
@@ -419,7 +421,7 @@ def generate_pdf_from_firestore(year, month, events_data):
                             x
                             + (
                                 cell_width_deseado
-                                - c.stringWidth(texto_attr, "Helvetica", int(15 * escala))
+                                - c.stringWidth(texto_attr, "Helvetica", font_size(15))
                             )
                             / 2
                         )
@@ -433,12 +435,16 @@ def generate_pdf_from_firestore(year, month, events_data):
                                 (
                                     x_centrado,
                                     y_text,
-                                    x_centrado + c.stringWidth(texto_attr, "Helvetica", int(15 * escala)),
+                                    x_centrado + c.stringWidth(texto_attr, "Helvetica", font_size(15)),
                                     y_text + 15 * escala,
                                 ),
                             )
 
                         y_text -= interlineado
+
+                # Bajar para el siguiente evento del mismo rango
+                total_lineas = 1 + lineas_atributos
+                y_cursor -= (total_lineas * interlineado) + (12 * escala)
 
     c.save()
     buffer.seek(0)
